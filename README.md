@@ -11,6 +11,15 @@ An AI-powered PDF assistant built with FastAPI and OpenAI that allows users to u
 * FastAPI backend
 * OpenAI integration
 
+## 📌 AI Pipeline Evolution
+
+This project was built step-by-step to simulate a production-level RAG system:
+
+- 📄 **PDF Upload API** → FastAPI endpoint for file ingestion
+- ✂️ **Chunking Logic** → Splits large documents into manageable segments
+- 🧠 **Embeddings System** → Converts text into vector representations using OpenAI
+- 🔍 **Similarity Search** → Finds most relevant chunks using semantic similarity
+
 ## Project Structure
 
 ```
