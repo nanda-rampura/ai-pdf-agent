@@ -1,6 +1,13 @@
-# AI PDF Agent
+# AI PDF Agent 🚀
 
-An AI-powered PDF assistant built with FastAPI and OpenAI that allows users to upload PDFs and ask questions.
+An AI-powered Retrieval-Augmented Generation (RAG) system built with FastAPI and OpenAI that allows users to upload PDFs and ask semantic questions over their content.
+
+---
+
+## System Overview
+
+This project implements a production-style **RAG (Retrieval-Augmented Generation) pipeline**:
+
 
 ## Features
 
