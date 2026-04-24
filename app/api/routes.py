@@ -1,23 +1,18 @@
 from fastapi import APIRouter, UploadFile, File
-import numpy as np
 from app.services.ai_service import ask_llm
 from app.services.embedding_service import (
     split_text,
     get_embeddings,
-    cosine_similarity
 )
+import uuid
+from app.services.vector_db import add_documents, search
 
 router = APIRouter()
-
-pdf_chunks = []
-pdf_embeddings = []
 
 embeddings = get_embeddings()
 
 @router.post("/upload-pdf/")
 async def upload_pdf(file: UploadFile = File(...)):
-
-    global pdf_chunks, pdf_embeddings
 
     content = await file.read()
 
@@ -33,27 +28,28 @@ async def upload_pdf(file: UploadFile = File(...)):
 
     pdf_chunks = split_text(text)
     pdf_embeddings = embeddings.embed_documents(pdf_chunks)
-
-    return {"chunks": len(pdf_chunks)}
+    doc_id = str(uuid.uuid4())  # unique per upload
+    ids = [f"{doc_id}_{i}" for i in range(len(pdf_chunks))]
+    add_documents(pdf_chunks, pdf_embeddings, ids)
+    return {
+        "chunks": len(pdf_chunks),
+        "message": "Stored in vector DB successfully"
+    }
 
 
 @router.get("/ask-pdf/")
 def ask_pdf(question: str):
-
-    if not pdf_chunks:
-        return {"error": "Upload PDF first"}
-
     q_emb = embeddings.embed_query(question)
 
-    similarities = [
-        cosine_similarity(q_emb, emb)
-        for emb in pdf_embeddings
-    ]
+    top_chunks = search(q_emb, top_k=3)
+    
+    if not top_chunks:
+        return {"error": "No data found. Upload PDF first."}
+    
+    # Step 3: Build context
+    context = "\n".join(top_chunks)
 
-    top_indices = np.argsort(similarities)[-3:]
-
-    context = "\n".join([pdf_chunks[i] for i in top_indices])
-
+    # Step 4: Ask LLM
     answer = ask_llm(context, question)
 
     return {"answer": answer}

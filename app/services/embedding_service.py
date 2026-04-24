@@ -7,7 +7,6 @@ import numpy as np
 def get_embeddings():
     return OpenAIEmbeddings(api_key=OPENAI_API_KEY)
 
-
 def split_text(text: str):
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
