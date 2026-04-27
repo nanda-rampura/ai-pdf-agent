@@ -3,7 +3,8 @@ import uuid
 import time
 
 from fastapi import APIRouter, UploadFile, File
-from app.main import get_request_id
+
+from app.core.request_context import get_request_id
 from app.services.ai_service import ask_llm
 from app.services.embedding_service import split_text, get_embeddings
 from app.services.vector_db import add_documents, search
@@ -19,7 +20,8 @@ embeddings = get_embeddings()
 # Request-aware logging helper
 # -----------------------------
 def log(msg: str):
-    logger.info(f"[req={get_request_id()}] {msg}")
+    rid = get_request_id() or "no-request"
+    logger.info(f"[req={rid}] {msg}")
 
 
 @router.post("/upload-pdf/")

@@ -1,41 +1,34 @@
 from fastapi import FastAPI, Request
 import logging
 import uuid
-from contextvars import ContextVar
 
+from app.core.request_context import set_request_id, get_request_id
 from app.api.routes import router
 
 app = FastAPI(title="AI PDF Agent")
 
 # -----------------------------
-# 1. Request ID context
-# -----------------------------
-request_id_var: ContextVar[str] = ContextVar("request_id", default="startup")
-
-
-def get_request_id():
-    return request_id_var.get()
-
-
-# -----------------------------
-# 2. Middleware to inject request_id
+# 1. Middleware: request_id injection
 # -----------------------------
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
     request_id = str(uuid.uuid4())[:8]
-    request_id_var.set(request_id)
+
+    # store in context
+    set_request_id(request_id)
 
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
+
     return response
 
 
 # -----------------------------
-# 3. Logging setup (centralized)
+# 2. Logging setup (centralized)
 # -----------------------------
 class RequestIdFilter(logging.Filter):
     def filter(self, record):
-        record.request_id = get_request_id()
+        record.request_id = get_request_id() or "no-request"
         return True
 
 
@@ -46,14 +39,14 @@ logging.basicConfig(
 
 logging.getLogger().addFilter(RequestIdFilter())
 
-# Reduce noisy uvicorn logs
+# Reduce noisy logs
 logging.getLogger("uvicorn").setLevel(logging.WARNING)
 logging.getLogger("uvicorn.error").setLevel(logging.INFO)
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
 
 # -----------------------------
-# 4. Routes
+# 3. Routes
 # -----------------------------
 app.include_router(router)
 
