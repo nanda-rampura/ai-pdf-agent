@@ -1,143 +1,176 @@
-# AI PDF Agent 🚀
 
-An AI-powered Retrieval-Augmented Generation (RAG) system built with FastAPI and OpenAI that allows users to upload PDFs and ask semantic questions over their content.
+# 🚀 AI PDF Agent (Production-Style RAG System)
 
----
-
-## System Overview
-
-This project implements a production-style **RAG (Retrieval-Augmented Generation) pipeline**:
-
-
-The system enables intelligent question answering over PDF documents using vector-based retrieval.
+![Python](https://img.shields.io/badge/python-3.11-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Framework-green)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-orange)
+![VectorDB](https://img.shields.io/badge/VectorDB-ChromaDB-purple)
 
 ---
 
-## ⚙️ Features
+## 🧠 Overview
 
-- 📄 Upload PDF documents via API
-- ✂️ Intelligent text chunking (RecursiveCharacterTextSplitter)
-- 🧠 OpenAI embeddings for semantic representation
-- 🔍 Cosine similarity-based document retrieval
-- 🤖 Context-aware LLM responses using GPT-4o-mini
-- ⚡ FastAPI backend (production-style modular architecture)
+AI PDF Agent is a **Retrieval-Augmented Generation (RAG)** system that allows users to upload PDF documents and ask intelligent questions over them.
+
+It uses:
+- OpenAI embeddings for semantic understanding
+- ChromaDB for vector similarity search
+- GPT-4o-mini for response generation
+- FastAPI for backend APIs
 
 ---
 
-## 📌 AI Pipeline Evolution
+## ⚙️ System Architecture
 
-This project was built step-by-step to simulate a real-world AI system:
+```
+PDF Upload
+   ↓
+Text Extraction (PyPDF2)
+   ↓
+Chunking (RecursiveCharacterTextSplitter)
+   ↓
+Embeddings (OpenAI)
+   ↓
+Vector DB (ChromaDB)
+   ↓
+Similarity Search
+   ↓
+Filtering + Ranking
+   ↓
+Context Compression
+   ↓
+LLM (GPT-4o-mini)
+   ↓
+Final Answer
+```
 
-- 📄 **PDF Upload API** → Ingests documents via FastAPI
-- ✂️ **Chunking Layer** → Splits large documents into semantic chunks
-- 🧠 **Embedding Layer** → Converts text into vector representations
-- 🔍 **Similarity Search Layer** → Finds most relevant chunks using cosine similarity
-- 🤖 **LLM Layer** → Generates final answer using retrieved context
+---
+
+## ✨ Features
+
+- 📄 PDF upload via API
+- ✂️ Intelligent text chunking (overlap-aware)
+- 🧠 OpenAI embeddings (semantic search)
+- 🔍 ChromaDB vector similarity search
+- 📊 Score-based filtering & ranking
+- 🧩 Context compression for LLM efficiency
+- 🤖 GPT-4o-mini responses grounded in context
+- 📈 Request-level logging with timing metrics
+- ⚡ FastAPI production-ready structure
 
 ---
 
 ## 🏗️ Project Structure
 
-ai-pdf-agent/
-├── app/
-│ ├── main.py # FastAPI entry point
-│ ├── api/
-│ │ └── routes.py # API routes (upload, ask)
-│ ├── services/
-│ │ ├── ai_service.py # LLM logic (OpenAI calls)
-│ │ ├── embedding_service.py # Chunking + embeddings + similarity
-│ │ └── pdf_service.py # PDF extraction logic
-│ └── core/
-│ └── config.py # Environment variables & config
-├── requirements.txt
-├── .env
-├── .gitignore
-└── README.md
-
-## 🧰 Tech Stack
-
-- Python 3.9+
-- FastAPI
-- OpenAI API (GPT-4o-mini)
-- LangChain (Text splitting + embeddings)
-- PyPDF2
-- NumPy
+```
+app/
+├── main.py                 # FastAPI app + logging middleware
+├── api/
+│   └── routes.py          # API endpoints
+├── services/
+│   ├── ai_service.py      # LLM integration
+│   ├── embedding_service.py
+│   ├── vector_db.py       # ChromaDB logic
+│   └── pdf_service.py
+└── core/
+    ├── config.py
+    └── request_context.py
+```
 
 ---
 
 ## 📡 API Endpoints
 
 ### 📄 Upload PDF
-
 ```http
 POST /upload-pdf/
-
-## API Endpoints
-
-### Upload PDF
-
-```
-POST /upload-pdf/
 ```
 
-### Ask AI
-
-```
-GET /ask-ai/
-```
-
-### Ask PDF
-
-```
-GET /ask-pdf/
+### 🤖 Ask Question
+```http
+GET /ask-pdf/?question=your_question
 ```
 
-## Setup
+---
 
-### 1. Clone Repository
+## 🔍 Retrieval Pipeline (Key Innovation)
 
-```
-git clone <your-repo-url>
+### 1. Retrieval
+- Semantic search using embeddings + ChromaDB
+
+### 2. Filtering
+- Removes low relevance chunks using threshold (e.g., 0.65)
+
+### 3. Ranking
+- Sorts chunks by similarity score
+
+### 4. Context Formatting
+- Structured chunk labeling improves LLM reasoning
+
+### 5. LLM Grounding
+- Strict prompt prevents hallucinations
+
+### 6. Observability
+- Request ID logging
+- Step-by-step timing breakdown
+
+---
+
+## 🧰 Tech Stack
+
+- Python 3.11+
+- FastAPI
+- OpenAI API (GPT-4o-mini)
+- ChromaDB (in-memory vector DB)
+- LangChain (text splitting + embeddings)
+- PyPDF2
+- NumPy
+
+---
+
+## 🚀 Run Locally
+
+```bash
+git clone <repo-url>
 cd ai-pdf-agent
-```
 
-### 2. Create Virtual Environment
-
-```
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate
-```
 
-### 3. Install Dependencies
-
-```
 pip install -r requirements.txt
-```
 
-### 4. Run Server
-
-```
 uvicorn app.main:app --reload
 ```
 
-## API Docs
+---
 
-Open in browser:
+## 🌐 API Docs
 
 ```
 http://127.0.0.1:8000/docs
 ```
 
-## Future Improvements
+---
 
-* Chunking large PDFs
-* Vector database integration
-* LangChain integration
-* Chat memory
-* Frontend UI
+## ☁️ Deployment
+
+- Deployable on Render
+- Uses in-memory ChromaDB (no persistent storage required)
+- Stateless API design
 
 ---
 
-## Author
+## 📈 Future Improvements
 
-Built as part of AI Engineering learning journey.
+- Persistent vector DB (Redis / Chroma persistent / Pinecone)
+- Multi-document chat memory
+- Streaming responses
+- React frontend UI
+- Hybrid search (BM25 + vector)
+- Reranking model (cross-encoder)
+
+---
+
+## 👨‍💻 Author
+
+Built as part of an AI engineering learning journey focused on production-grade RAG systems.

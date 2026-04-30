@@ -8,6 +8,7 @@ from app.core.request_context import get_request_id
 from app.services.ai_service import ask_llm
 from app.services.embedding_service import split_text, get_embeddings
 from app.services.vector_db import add_documents, search
+from app.services.embedding_service import embed_documents_with_cache
 
 router = APIRouter()
 
@@ -45,6 +46,7 @@ async def upload_pdf(file: UploadFile = File(...)):
         text = ""
         for i, page in enumerate(reader.pages):
             page_text = page.extract_text() or ""
+            text += f"\n\n--- Page {i+1} ---\n\n"
             text += page_text
             log(f"Extracted text from page {i}")
 
@@ -59,8 +61,9 @@ async def upload_pdf(file: UploadFile = File(...)):
 
         # ---------------- Embeddings ----------------
         t2 = time.time()
-        pdf_embeddings = embeddings.embed_documents(pdf_chunks)
+        pdf_embeddings = embed_documents_with_cache(embeddings, pdf_chunks)
         log("Embeddings generated successfully")
+        log(f"Embedding cache hit improved performance")
         log(f"Embedding generation took {time.time() - t2:.2f}s")
 
         # ---------------- Vector DB ----------------
@@ -91,35 +94,73 @@ def ask_pdf(question: str):
     start_total = time.time()
 
     try:
+        # ---------------- Query preprocessing ----------------
+        is_summary = "summary" in question.lower()
+
+        # Improve query for summarization
+        if is_summary:
+            question = "Summarize the entire document in a structured way including skills, experience, education, and key highlights."
+
         # ---------------- Query embedding ----------------
         t0 = time.time()
         q_emb = embeddings.embed_query(question)
-        log("Query embedding generated")
         log(f"Query embedding took {time.time() - t0:.2f}s")
 
         # ---------------- Vector search ----------------
         t1 = time.time()
-        top_chunks = search(q_emb, top_k=3)
-        log(f"Retrieved {len(top_chunks)} chunks from vector DB")
+        documents, distances = search(q_emb, top_k=5)
+
+        log(f"Retrieved {len(documents)} raw chunks")
         log(f"Vector search took {time.time() - t1:.2f}s")
 
-        if not top_chunks:
-            log("No chunks found in vector DB")
-            return {"error": "No data found. Upload PDF first."}
+        # ---------------- Safety check ----------------
+        if not documents:
+            log("No chunks returned from vector DB")
+            return {
+                "answer": "No data found. Please upload a PDF first."
+            }
 
-        context = "\n".join(top_chunks)
+        # ---------------- Ranking (NO FILTERING) ----------------
+        scored_chunks = []
+
+        for doc, dist in zip(documents, distances):
+            if not isinstance(dist, (int, float)):
+                continue
+            scored_chunks.append((doc, dist))
+
+        # lower distance = better match
+        scored_chunks.sort(key=lambda x: x[1])
+
+        # ---------------- Adaptive chunk selection ----------------
+        if is_summary:
+            # summary → broader context
+            top_chunks = [chunk for chunk, _ in scored_chunks[:8]]
+        else:
+            # normal Q&A → precise context
+            top_chunks = [chunk for chunk, _ in scored_chunks[:4]]
+
+        log(f"Top chunks selected: {len(top_chunks)}")
+
+        # ---------------- Context compression ----------------
+        context = "\n\n".join(
+            f"[Chunk {i+1}] {chunk}"
+            for i, chunk in enumerate(top_chunks)
+        )
+
         log(f"Context length: {len(context)}")
 
         # ---------------- LLM call ----------------
         t2 = time.time()
         answer = ask_llm(context, question)
-        log("LLM response generated successfully")
         log(f"LLM call took {time.time() - t2:.2f}s")
 
         log(f"Total query time: {time.time() - start_total:.2f}s")
 
-        return {"answer": answer}
+        return {
+            "answer": answer,
+            "chunks_used": len(top_chunks)
+        }
 
     except Exception as e:
-        logger.error(f"[req={get_request_id()}] Error in ask_pdf", exc_info=True)
+        logger.error("Error in ask_pdf", exc_info=True)
         return {"error": str(e)}

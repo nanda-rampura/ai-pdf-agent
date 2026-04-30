@@ -34,7 +34,7 @@ class RequestIdFilter(logging.Filter):
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | req=%(request_id)s | %(name)s | %(message)s",
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 )
 
 logging.getLogger().addFilter(RequestIdFilter())

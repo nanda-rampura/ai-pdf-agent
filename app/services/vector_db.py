@@ -23,7 +23,7 @@ def add_documents(chunks, embeddings, ids, doc_id):
         documents=chunks,
         embeddings=embeddings,
         ids=ids,
-        metadatas=[{"doc_id": doc_id} for _ in chunks]
+        metadatas=[{"doc_id": doc_id, "chunk_index": i} for i in range(len(chunks))]
     )
         logger.info(f"Added {len(chunks)} documents to vector DB")
 
@@ -31,19 +31,31 @@ def add_documents(chunks, embeddings, ids, doc_id):
         logger.error("Error adding documents to vector DB", exc_info=True)
         raise
 
-
-def search(query_embedding, top_k=3):
+def search(query_embedding, top_k=5):
     try:
         results = collection.query(
             query_embeddings=[query_embedding],
             n_results=top_k
         )
 
-        docs = results.get("documents", [[]])[0]
-        logger.info(f"Search returned {len(docs)} results (top_k={top_k})")
+        documents = results.get("documents", [])
+        distances = results.get("distances", [])
 
-        return docs
+        # ALWAYS flatten safely
+        documents = documents[0] if documents else []
+        distances = distances[0] if distances else []
 
-    except Exception as e:
+        # FINAL SAFETY CHECK
+        if not isinstance(documents, list):
+            documents = []
+
+        if not isinstance(distances, list):
+            distances = []
+
+        logger.info(f"Search returned {len(documents)} results")
+
+        return documents, distances   # 👈 IMPORTANT CHANGE
+
+    except Exception:
         logger.error("Error during vector DB search", exc_info=True)
-        return []
+        return [], []
