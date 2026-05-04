@@ -3,7 +3,7 @@ import uuid
 import time
 
 from fastapi import APIRouter, UploadFile, File
-
+from app.services.vector_db import collection
 from app.core.request_context import get_request_id
 from app.services.ai_service import ask_llm
 from app.services.embedding_service import split_text, get_embeddings
@@ -79,9 +79,10 @@ async def upload_pdf(file: UploadFile = File(...)):
         log(f"Total upload time: {time.time() - start_total:.2f}s")
 
         return {
-            "chunks": len(pdf_chunks),
-            "message": "Stored in vector DB successfully"
-        }
+                "doc_id": doc_id,
+                "chunks": len(pdf_chunks),
+                "message": "Stored in vector DB successfully"
+            }
 
     except Exception as e:
         logger.error(f"[req={get_request_id()}] Error in upload_pdf", exc_info=True)
@@ -164,3 +165,31 @@ def ask_pdf(question: str):
     except Exception as e:
         logger.error("Error in ask_pdf", exc_info=True)
         return {"error": str(e)}
+    
+@router.get("/documents")
+def list_documents():
+    try:
+        results = collection.get()
+        metadatas = results.get("metadatas", [])
+
+        doc_ids = list({
+            meta["doc_id"]
+            for meta in metadatas
+            if meta and "doc_id" in meta
+        })
+
+        return {"documents": doc_ids}
+
+    except Exception:
+        logger.error("Error listing documents", exc_info=True)
+        return {"documents": []}
+
+@router.delete("/documents/{doc_id}")
+def delete_document(doc_id: str):
+    result = collection.get(where={"doc_id": doc_id})
+
+    if not result.get("ids"):
+        return {"message": "not found"}
+
+    collection.delete(where={"doc_id": doc_id})
+    return {"message": "deleted"}

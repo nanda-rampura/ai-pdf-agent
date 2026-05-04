@@ -1,14 +1,17 @@
 import logging
 import chromadb
+import os
 
 logger = logging.getLogger(__name__)
 
-# In-memory client (safe for Render)
-client = chromadb.Client()
-logger.info("ChromaDB in-memory client initialized")
+DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_db")
+os.makedirs(DB_PATH, exist_ok=True)
 
+client = chromadb.PersistentClient(path=DB_PATH)
+logger.info("ChromaDB persistent client initialized")
 collection = client.get_or_create_collection(
-    name="pdf_chunks"
+    name="pdf_chunks",
+    embedding_function=None   
 )
 logger.info("ChromaDB collection 'pdf_chunks' ready")
 
