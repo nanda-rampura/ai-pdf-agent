@@ -1,176 +1,122 @@
+# 📄 AI PDF Agent
 
-# 🚀 AI PDF Agent (Production-Style RAG System)
+A FastAPI-based AI PDF assistant that extracts text from uploaded PDFs, creates embeddings, stores chunks in ChromaDB, and answers natural language questions with an OpenAI LLM.
 
-![Python](https://img.shields.io/badge/python-3.11-blue)
-![FastAPI](https://img.shields.io/badge/FastAPI-Framework-green)
-![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-orange)
-![VectorDB](https://img.shields.io/badge/VectorDB-ChromaDB-purple)
+## 🚀 Features
 
----
+- 📄 Upload PDF files via `/upload-pdf/`
+- 🔎 Extract text, split into chunks, and generate embeddings
+- 🧠 Query PDF content with natural language using `/ask-pdf/`
+- 🗂️ Store document chunks in ChromaDB for fast retrieval
+- 🧹 List and delete uploaded documents via API
+- 🧾 Health check endpoint for readiness monitoring
 
-## 🧠 Overview
+## 🏗️ Architecture
 
-AI PDF Agent is a **Retrieval-Augmented Generation (RAG)** system that allows users to upload PDF documents and ask intelligent questions over them.
-
-It uses:
-- OpenAI embeddings for semantic understanding
-- ChromaDB for vector similarity search
-- GPT-4o-mini for response generation
-- FastAPI for backend APIs
-
----
-
-## ⚙️ System Architecture
-
-```
-PDF Upload
-   ↓
-Text Extraction (PyPDF2)
-   ↓
-Chunking (RecursiveCharacterTextSplitter)
-   ↓
-Embeddings (OpenAI)
-   ↓
-Vector DB (ChromaDB)
-   ↓
-Similarity Search
-   ↓
-Filtering + Ranking
-   ↓
-Context Compression
-   ↓
-LLM (GPT-4o-mini)
-   ↓
-Final Answer
-```
-
----
-
-## ✨ Features
-
-- 📄 PDF upload via API
-- ✂️ Intelligent text chunking (overlap-aware)
-- 🧠 OpenAI embeddings (semantic search)
-- 🔍 ChromaDB vector similarity search
-- 📊 Score-based filtering & ranking
-- 🧩 Context compression for LLM efficiency
-- 🤖 GPT-4o-mini responses grounded in context
-- 📈 Request-level logging with timing metrics
-- ⚡ FastAPI production-ready structure
-
----
-
-## 🏗️ Project Structure
-
-```
-app/
-├── main.py                 # FastAPI app + logging middleware
-├── api/
-│   └── routes.py          # API endpoints
-├── services/
-│   ├── ai_service.py      # LLM integration
-│   ├── embedding_service.py
-│   ├── vector_db.py       # ChromaDB logic
-│   └── pdf_service.py
-└── core/
-    ├── config.py
-    └── request_context.py
-```
-
----
-
-## 📡 API Endpoints
-
-### 📄 Upload PDF
-```http
-POST /upload-pdf/
-```
-
-### 🤖 Ask Question
-```http
-GET /ask-pdf/?question=your_question
-```
-
----
-
-## 🔍 Retrieval Pipeline (Key Innovation)
-
-### 1. Retrieval
-- Semantic search using embeddings + ChromaDB
-
-### 2. Filtering
-- Removes low relevance chunks using threshold (e.g., 0.65)
-
-### 3. Ranking
-- Sorts chunks by similarity score
-
-### 4. Context Formatting
-- Structured chunk labeling improves LLM reasoning
-
-### 5. LLM Grounding
-- Strict prompt prevents hallucinations
-
-### 6. Observability
-- Request ID logging
-- Step-by-step timing breakdown
-
----
+Upload PDF → Text extraction → Chunking → Embeddings → ChromaDB storage → Vector search → LLM response
 
 ## 🧰 Tech Stack
 
-- Python 3.11+
+- Python 3.11
 - FastAPI
-- OpenAI API (GPT-4o-mini)
-- ChromaDB (in-memory vector DB)
-- LangChain (text splitting + embeddings)
 - PyPDF2
-- NumPy
+- ChromaDB
+- OpenAI embeddings and Chat API
+- Uvicorn
+- LangChain text splitter
 
----
+## 📦 Repository Structure
 
-## 🚀 Run Locally
+- `app/main.py` — FastAPI app and middleware
+- `app/api/routes.py` — PDF upload, question answering, document listing/deletion
+- `app/services/ai_service.py` — LLM prompt and OpenAI chat call
+- `app/services/embedding_service.py` — text splitting, embeddings, cache
+- `app/services/vector_db.py` — ChromaDB storage and search
+- `app/core/config.py` — environment loading and OpenAI client
+- `requirements.txt` — Python dependencies
+- `runtime.txt` — Python runtime version
+
+## ⚙️ Setup Instructions
+
+### 1. Create and activate a virtual environment
 
 ```bash
-git clone <repo-url>
-cd ai-pdf-agent
-
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
+```
 
+### 2. Install dependencies
+
+```bash
 pip install -r requirements.txt
+```
 
+### 3. Add your OpenAI API key
+
+Create a `.env` file in the repo root with:
+
+```env
+OPENAI_API_KEY=your_openai_api_key
+```
+
+### 4. Run the app
+
+```bash
 uvicorn app.main:app --reload
 ```
 
----
+By default, the API will be available at `http://127.0.0.1:8000`.
 
-## 🌐 API Docs
+## 🔌 API Endpoints
 
+- `GET /` — health/status
+- `GET /health` — readiness check
+- `POST /upload-pdf/` — upload a PDF file
+- `GET /ask-pdf/?question=...` — ask a question about uploaded PDF content
+- `GET /documents` — list stored document IDs
+- `DELETE /documents/{doc_id}` — delete a stored document from ChromaDB
+
+## 🧪 Example Usage
+
+Upload a PDF:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/upload-pdf/" \
+  -F "file=@/path/to/document.pdf"
 ```
-http://127.0.0.1:8000/docs
+
+Ask a question:
+
+```bash
+curl "http://127.0.0.1:8000/ask-pdf/?question=What+is+the+main+topic%3F"
 ```
 
----
+List documents:
 
-## ☁️ Deployment
+```bash
+curl "http://127.0.0.1:8000/documents"
+```
 
-- Deployable on Render
-- Uses in-memory ChromaDB (no persistent storage required)
-- Stateless API design
+Delete a document:
 
----
+```bash
+curl -X DELETE "http://127.0.0.1:8000/documents/<doc_id>"
+```
+
+## 📝 Notes
+
+- `chroma_db/` stores persistent vector data locally
+- `temp.pdf` is used temporarily during upload processing
+- The app uses a simple in-memory embedding cache to avoid recomputing duplicate chunks
 
 ## 📈 Future Improvements
 
-- Persistent vector DB (Redis / Chroma persistent / Pinecone)
-- Multi-document chat memory
-- Streaming responses
-- React frontend UI
-- Hybrid search (BM25 + vector)
-- Reranking model (cross-encoder)
-
----
+- Add a web frontend or dashboard
+- Support multiple document uploads per session
+- Add authentication and access control
+- Add scanned PDF OCR support
+- Improve chunk selection and query prompting
 
 ## 👨‍💻 Author
 
-Built as part of an AI engineering learning journey focused on production-grade RAG systems.
+Built by Nanda Rampura
