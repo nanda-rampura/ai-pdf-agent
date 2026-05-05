@@ -15,6 +15,23 @@ A FastAPI-based AI PDF assistant that extracts text from uploaded PDFs, creates 
 
 Upload PDF → Text extraction → Chunking → Embeddings → ChromaDB storage → Vector search → LLM response
 
+## 📊 Architecture Diagram
+
+```mermaid
+flowchart LR
+    User[User] -->|Upload PDF| FastAPI[FastAPI API]
+    FastAPI --> PDF[PDF Parsing / Extraction]
+    PDF --> Chunking[Text Chunking]
+    Chunking --> Embeddings[Embedding Generation]
+    Embeddings --> Chroma[ChromaDB Storage]
+    Question[Question] -->|Embed query| Embeddings
+    Embeddings --> Search[Vector Search]
+    Search --> TopChunks[Top Chunks]
+    TopChunks --> LLM[LLM Prompt]
+    LLM --> Answer[Answer]
+    Chroma --> Search
+```
+
 ## 🧰 Tech Stack
 
 - Python 3.11
@@ -24,6 +41,7 @@ Upload PDF → Text extraction → Chunking → Embeddings → ChromaDB storage 
 - OpenAI embeddings and Chat API
 - Uvicorn
 - LangChain text splitter
+- React + Vite
 
 ## 📦 Repository Structure
 
@@ -33,6 +51,7 @@ Upload PDF → Text extraction → Chunking → Embeddings → ChromaDB storage 
 - `app/services/embedding_service.py` — text splitting, embeddings, cache
 - `app/services/vector_db.py` — ChromaDB storage and search
 - `app/core/config.py` — environment loading and OpenAI client
+- `frontend/` — React UI built with Vite
 - `requirements.txt` — Python dependencies
 - `runtime.txt` — Python runtime version
 
@@ -51,7 +70,20 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Add your OpenAI API key
+### 3. Install frontend dependencies
+
+```bash
+cd frontend
+npm install
+```
+
+### 4. Run tests
+
+```bash
+pytest tests
+```
+
+### 5. Add your OpenAI API key
 
 Create a `.env` file in the repo root with:
 
@@ -59,13 +91,22 @@ Create a `.env` file in the repo root with:
 OPENAI_API_KEY=your_openai_api_key
 ```
 
-### 4. Run the app
+### 5. Run the backend
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
 By default, the API will be available at `http://127.0.0.1:8000`.
+
+### 6. Run the frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+By default, the frontend runs at `http://localhost:3000`.
 
 ## 🔌 API Endpoints
 
