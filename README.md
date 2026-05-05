@@ -57,14 +57,16 @@ flowchart LR
 
 ## ⚙️ Setup Instructions
 
-### 1. Create and activate a virtual environment
+### 1. Create and activate a Python virtual environment
+
+From the repo root:
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 2. Install dependencies
+### 2. Install backend dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -77,13 +79,9 @@ cd frontend
 npm install
 ```
 
-### 4. Run tests
+> Note: The frontend requires Node.js 18 or newer.
 
-```bash
-pytest tests
-```
-
-### 5. Add your OpenAI API key
+### 4. Add your OpenAI API key
 
 Create a `.env` file in the repo root with:
 
@@ -91,22 +89,34 @@ Create a `.env` file in the repo root with:
 OPENAI_API_KEY=your_openai_api_key
 ```
 
-### 5. Run the backend
+### 5. Run tests
+
+From the repo root:
+
+```bash
+pytest tests
+```
+
+### 6. Run the backend
+
+From the repo root:
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-By default, the API will be available at `http://127.0.0.1:8000`.
+The backend will be available at `http://127.0.0.1:8000`.
 
-### 6. Run the frontend
+### 7. Run the frontend
+
+Open a second terminal, then:
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-By default, the frontend runs at `http://localhost:3000`.
+The frontend should open at `http://localhost:3000`.
 
 ## 🔌 API Endpoints
 
