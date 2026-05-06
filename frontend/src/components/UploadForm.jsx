@@ -1,53 +1,45 @@
-import { useState } from 'react'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL
+import { useState } from "react";
+import { api } from "../api/client";
 
 export function UploadForm({ onUploadSuccess, onStatusChange }) {
-  const [file, setFile] = useState(null)
+  const [file, setFile] = useState(null);
 
-  const handleUpload = async (event) => {
-    event.preventDefault()
+  const handleUpload = async (e) => {
+    e.preventDefault();
+
     if (!file) {
-      onStatusChange('Select a PDF before uploading')
-      return
+      onStatusChange("Select a PDF");
+      return;
     }
-
-    onStatusChange('Uploading PDF...')
-    const formData = new FormData()
-    formData.append('file', file)
 
     try {
-      const response = await fetch(`${API_BASE}/upload-pdf/`, {
-        method: 'POST',
-        body: formData,
-      })
-      const data = await response.json()
+      onStatusChange("Uploading...");
 
-      if (!response.ok) {
-        onStatusChange(data.error || 'Upload failed')
-        return
-      }
+      const data = await api.uploadPDF(file);
 
-      onStatusChange(`Uploaded ${data.chunks} chunks for doc ${data.doc_id}`)
-      setFile(null)
-      onUploadSuccess()
-    } catch (error) {
-      console.error(error)
-      onStatusChange('Upload failed')
+      onStatusChange(
+        `Uploaded ${data.chunks || 0} chunks (ID: ${data.doc_id})`
+      );
+
+      setFile(null);
+      onUploadSuccess(); // refresh list
+    } catch (err) {
+      onStatusChange(err.message);
     }
-  }
+  };
 
   return (
     <section className="card">
-      <h2>1. Upload PDF</h2>
-      <form onSubmit={handleUpload} className="form-grid">
+      <h2>Upload PDF</h2>
+
+      <form onSubmit={handleUpload}>
         <input
           type="file"
           accept="application/pdf"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          onChange={(e) => setFile(e.target.files?.[0])}
         />
-        <button type="submit">Upload</button>
+        <button>Upload</button>
       </form>
     </section>
-  )
+  );
 }

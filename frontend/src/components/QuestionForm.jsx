@@ -1,58 +1,48 @@
-import { useState } from 'react'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL
+import { useState } from "react";
+import { api } from "../api/client";
 
 export function QuestionForm({ onStatusChange }) {
-  const [question, setQuestion] = useState('')
-  const [answer, setAnswer] = useState('')
+  const [q, setQ] = useState("");
+  const [answer, setAnswer] = useState("");
 
-  const handleAsk = async (event) => {
-    event.preventDefault()
-    if (!question) {
-      onStatusChange('Enter a question')
-      return
-    }
-
-    onStatusChange('Asking question...')
-    setAnswer('')
+  const ask = async (e) => {
+    e.preventDefault();
 
     try {
-      const response = await fetch(
-        `${API_BASE}/ask-pdf/?question=${encodeURIComponent(question)}`
-      )
-      const data = await response.json()
+      onStatusChange("Thinking...");
 
-      if (!response.ok) {
-        onStatusChange(data.error || 'Query failed')
-        return
-      }
+      const data = await api.askQuestion(q);
 
-      setAnswer(data.answer || 'No answer returned')
-      onStatusChange(`Used ${data.chunks_used || 0} chunks`)
-    } catch (error) {
-      console.error(error)
-      onStatusChange('Query failed')
+      setAnswer(data.answer || "No answer returned");
+
+      onStatusChange(
+        data.chunks_used != null
+          ? `Used ${data.chunks_used} chunks`
+          : "Done"
+      );
+    } catch (err) {
+      onStatusChange(err.message);
     }
-  }
+  };
 
   return (
     <section className="card">
-      <h2>2. Ask a question</h2>
-      <form onSubmit={handleAsk} className="form-grid">
+      <h2>Ask Question</h2>
+
+      <form onSubmit={ask}>
         <input
-          type="text"
-          value={question}
-          placeholder="Enter your question"
-          onChange={(e) => setQuestion(e.target.value)}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Ask something..."
         />
-        <button type="submit">Ask</button>
+        <button>Ask</button>
       </form>
+
       {answer && (
-        <div className="answer-box">
-          <h3>Answer</h3>
+        <div className="answer">
           <pre>{answer}</pre>
         </div>
       )}
     </section>
-  )
+  );
 }

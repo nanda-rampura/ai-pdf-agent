@@ -1,67 +1,50 @@
-import { useState, useEffect } from 'react'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+import { useEffect, useState } from "react";
+import { api } from "../api/client";
 
 export function DocumentList({ triggerRefresh, onStatusChange }) {
-  const [documents, setDocuments] = useState([])
+  const [docs, setDocs] = useState([]);
+
+  const load = async () => {
+    try {
+      const data = await api.getDocuments();
+      setDocs(data.documents || data || []);
+    } catch (err) {
+      onStatusChange(err.message);
+    }
+  };
 
   useEffect(() => {
-    fetchDocuments()
-  }, [triggerRefresh])
+    load();
+  }, [triggerRefresh]);
 
-  const fetchDocuments = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/documents`)
-      const data = await response.json()
-      setDocuments(data.documents || [])
-    } catch (error) {
-      console.error(error)
-      onStatusChange('Failed to load documents')
-    }
-  }
-
-  const handleDelete = async (docId) => {
-    const confirmed = window.confirm(`Delete document ${docId}?`)
-    if (!confirmed) {
-      return
-    }
+  const handleDelete = async (id) => {
+    if (!confirm("Delete document?")) return;
 
     try {
-      const response = await fetch(`${API_BASE}/documents/${docId}`, {
-        method: 'DELETE',
-      })
-      const data = await response.json()
-      if (!response.ok) {
-        onStatusChange(data.error || 'Delete failed')
-        return
-      }
-
-      onStatusChange(data.message || 'Deleted')
-      await fetchDocuments()
-    } catch (error) {
-      console.error(error)
-      onStatusChange('Delete failed')
+      await api.deleteDocument(id);
+      onStatusChange("Deleted");
+      load();
+    } catch (err) {
+      onStatusChange(err.message);
     }
-  }
+  };
 
   return (
     <section className="card">
-      <h2>3. Stored documents</h2>
-      {documents.length === 0 ? (
-        <p>No stored documents yet.</p>
+      <h2>Documents</h2>
+
+      {docs.length === 0 ? (
+        <p>No documents</p>
       ) : (
-        <ul className="doc-list">
-          {documents.map((docId) => (
-            <li key={docId}>
-              <span>{docId}</span>
-              <button onClick={() => handleDelete(docId)}>Delete</button>
-            </li>
-          ))}
-        </ul>
+        docs.map((id) => (
+          <div key={id} className="doc-item">
+            {id}
+            <button onClick={() => handleDelete(id)}>Delete</button>
+          </div>
+        ))
       )}
-      <button className="secondary" onClick={fetchDocuments}>
-        Refresh
-      </button>
+
+      <button onClick={load}>Refresh</button>
     </section>
-  )
+  );
 }

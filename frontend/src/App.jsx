@@ -1,40 +1,31 @@
-import { useState } from 'react'
-import { UploadForm } from './components/UploadForm'
-import { QuestionForm } from './components/QuestionForm'
-import { DocumentList } from './components/DocumentList'
+import { useState } from "react";
+import { UploadForm } from "./components/UploadForm";
+import { DocumentList } from "./components/DocumentList";
+import { QuestionForm } from "./components/QuestionForm";
 
-function App() {
-  const [status, setStatus] = useState('')
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
+export default function App() {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [status, setStatus] = useState("");
 
-  const handleUploadSuccess = () => {
-    setRefreshTrigger((prev) => prev + 1)
-  }
+  const triggerRefresh = () => setRefreshKey((k) => k + 1);
 
   return (
-    <div className="app-shell">
-      <header>
-        <h1>AI PDF Agent</h1>
-        <p>Upload a PDF, ask questions, and browse stored documents.</p>
-      </header>
+    <div className="container">
+      <h1>AI PDF Agent</h1>
 
-      <UploadForm 
-        onUploadSuccess={handleUploadSuccess}
+      <p className="status">{status}</p>
+
+      <UploadForm
+        onUploadSuccess={triggerRefresh}
+        onStatusChange={setStatus}
+      />
+
+      <DocumentList
+        triggerRefresh={refreshKey}
         onStatusChange={setStatus}
       />
 
       <QuestionForm onStatusChange={setStatus} />
-
-      <DocumentList 
-        triggerRefresh={refreshTrigger}
-        onStatusChange={setStatus}
-      />
-
-      <footer>
-        <p>{status}</p>
-      </footer>
     </div>
-  )
+  );
 }
-
-export default App
