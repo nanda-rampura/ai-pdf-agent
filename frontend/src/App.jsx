@@ -2,6 +2,7 @@ import { useState } from "react";
 import { UploadForm } from "./components/UploadForm";
 import { DocumentList } from "./components/DocumentList";
 import { QuestionForm } from "./components/QuestionForm";
+import "./App.css";
 
 export default function App() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -15,17 +16,21 @@ export default function App() {
 
       <p className="status">{status}</p>
 
-      <UploadForm
-        onUploadSuccess={triggerRefresh}
-        onStatusChange={setStatus}
-      />
+      <div className="grid">
+        <UploadForm
+          onUploadSuccess={triggerRefresh}
+          onStatusChange={setStatus}
+        />
 
-      <DocumentList
-        triggerRefresh={refreshKey}
-        onStatusChange={setStatus}
-      />
+        <QuestionForm onStatusChange={setStatus} />
+      </div>
 
-      <QuestionForm onStatusChange={setStatus} />
+      <div style={{ marginTop: "18px" }}>
+        <DocumentList
+          triggerRefresh={refreshKey}
+          onStatusChange={setStatus}
+        />
+      </div>
     </div>
   );
 }

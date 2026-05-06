@@ -39,10 +39,11 @@ export function QuestionForm({ onStatusChange }) {
       </form>
 
       {answer && (
-        <div className="answer">
-          <pre>{answer}</pre>
+        <div className="answer-box">
+            <h3>Answer</h3>
+            <pre>{answer}</pre>
         </div>
-      )}
+        )}
     </section>
   );
 }

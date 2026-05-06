@@ -38,7 +38,9 @@ export function UploadForm({ onUploadSuccess, onStatusChange }) {
           accept="application/pdf"
           onChange={(e) => setFile(e.target.files?.[0])}
         />
-        <button>Upload</button>
+        <button type="submit">
+            Upload PDF
+            </button>
       </form>
     </section>
   );
