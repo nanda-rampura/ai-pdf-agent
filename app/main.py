@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import uuid
-
+from fastapi.middleware.cors import CORSMiddleware
 from app.core.request_context import set_request_id, get_request_id
 from app.api.routes import router
 
@@ -69,3 +69,14 @@ def home():
 def health():
     logging.info("Health check endpoint hit")
     return {"status": "ok"}
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://ai-pdf-agent.vercel.app",
+        "http://localhost:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
